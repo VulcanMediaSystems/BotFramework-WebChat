@@ -6,7 +6,8 @@ export interface DirectLineOptions {
     secret?: string,
     token?: string
     domain?: string,
-    webSocket?: boolean
+    webSocket?: boolean,
+    botData?: any
 }
 
 interface ActivityGroup {
@@ -29,6 +30,7 @@ export class DirectLine implements IBotConnection {
 
     private domain = "https://directline.botframework.com/v3/directline";
     private webSocket = false;
+    private botData = {};
 
     private conversationId: string;
     private secret: string;
@@ -45,6 +47,9 @@ export class DirectLine implements IBotConnection {
             this.domain = options.domain;
         if (options.webSocket)
             this.webSocket = options.webSocket;
+        if (options.botData){
+            this.botData = options.botData;
+        }
 
         this.activity$ = this.webSocket && WebSocket !== undefined
             ? this.webSocketActivity$()
@@ -170,11 +175,14 @@ export class DirectLine implements IBotConnection {
     }
 
     postActivity(activity: Activity) {
+        //first we want to add the data object to the channeData in activity
+        activity.channelData = {... activity.channelData,
+                              ... this.botData};
         // Use postMessageWithAttachments for messages with attachments that are local files (e.g. an image to upload)
         // Technically we could use it for *all* activities, but postActivity is much lighter weight
         // So, since WebChat is partially a reference implementation of Direct Line, we implement both.
-        if (activity.type === "message" && activity.attachments && activity.attachments.length > 0)
-            return this.postMessageWithAttachments(activity);
+        if (activity.type === "message" && (<Message>activity).attachments && (<Message>activity).attachments.length > 0)
+            return this.postMessageWithAttachments(<Message>activity);
             
         // If we're not connected to the bot, get connected
         // Will throw an error if we are not connected

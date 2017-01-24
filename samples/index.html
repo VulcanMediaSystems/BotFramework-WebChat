@@ -52,12 +52,15 @@
                 name: params["botname"] || 'botname'
             };
 
+            var botData = JSON.parse( params['botData'] || '{}' );
+
             BotChat.App({
                 directLine: {
                     secret: params['s'],
                     token: params['t'],
                     domain: params['domain'],
-                    webSocket: params['webSocket']
+                    webSocket: true,
+                    botData: botData
                 },
                 user: user,
                 bot: bot
